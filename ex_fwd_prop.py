@@ -3,7 +3,9 @@
 """
 Created on Tue Feb 19 14:51:03 2019
 
-@author: administrator
+Forward prop module
+
+@author: Naveen Kolli
 """
 import numpy as np
 import ex_init_layer_weights
