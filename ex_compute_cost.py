@@ -14,13 +14,13 @@ import numpy as np
 def compute_cost(AL, Y):
     
 #    cost = np.sum(np.multiply((1-Y),np.log((1-AL))) + np.multiply((Y),np.log((AL))))
-    a0 = AL[np.nonzero(Y)]
+    a0 = AL[np.nonzero(Y==0)]
     a1 = AL[np.nonzero(Y==1)]
-    cost = -np.sum(np.log(1-a0) + np.log(a1))
+    cost = -np.sum(np.log(1-a0)) - np.sum(np.log(a1))
     return cost
 
 out = np.random.rand(1000,1)
 y = np.floor(np.random.rand(1000,1)+0.5)
-#print(min(y), max(y), min(out), max(out))
+print(min(y), max(y), min(out), max(out))
 c = compute_cost(out, y)
 print(c)
