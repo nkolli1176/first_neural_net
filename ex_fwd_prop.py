@@ -3,12 +3,12 @@
 """
 Created on Tue Feb 19 14:51:03 2019
 
-Forward prop module
-
+Forward prop module for L layers
+::: Linear  -> Relu -> Linear -> Relu -> .... -> Linear -> Sigmoid -> Output
 @author: Naveen Kolli
 """
 import numpy as np
-import ex_init_layer_weights
+#import ex_init_layer_weights
 
 def sigmoid(z):
     sig = 1/(1 + np.exp(-z))
@@ -21,22 +21,22 @@ def relu(a):
 def L_model_forward(X, parameters):
     x0 = X
     caches = []
-    
+    # Gotta save the inputs as the first activations
+    caches.append(x0)
+
     for i in range(1, int(len(parameters.keys())/2)+1):
-        print('Processing Layer..'+str(i))
+        print('Fwd prop Layer..'+str(i)+'...shape'+str(parameters['W'+str(i)].shape))
         zl = np.matmul(parameters['W'+str(i)], x0) + parameters['b'+str(i)]
         x0 = relu(zl)
-        
         caches.append(zl)
 
     # Output layer Activation is sigmoid        
     AL = sigmoid(x0)    
-#    caches.append(x0)
      
     return AL, caches
 
 ## Uncomment to test the  function
-#layers = [12288, 20, 13, 7, 5, 1] #  4-layer model
+#layers = [12288, 20, 13, 7, 5, 1] #  5-layer model
 #
 #params = ex_init_layer_weights.initialize_parameters_deep(layers)
 #X = np.random.rand(layers[0],)

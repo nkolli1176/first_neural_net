@@ -19,7 +19,7 @@ def initialize_parameters_deep(layers_dims):
     
     for i in range(num_layers-1):
         parameters['W'+str(i+1)] = np.random.randn(layers_dims[i+1], layers_dims[i])
-        parameters['b'+str(i+1)] = np.random.randn(layers_dims[i+1], )
+        parameters['b'+str(i+1)] = np.random.randn(layers_dims[i+1], 1)
 #        print(parameters['W'+str(i+1)].shape)
 #        print(parameters['b'+str(i+1)].shape)
         
