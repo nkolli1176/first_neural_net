@@ -19,16 +19,34 @@ def relu(a):
     return rel
 
 def L_model_forward(X, parameters):
+#    x0 = X
+#    caches = []
+##    caches = []
+#    # Gotta save the inputs as the first activations
+#    caches.append(x0)
+#
+#    for i in range(1, int(len(parameters.keys())/2)+1):
+#        print('Fwd prop Layer..'+str(i)+'...shape'+str(parameters['W'+str(i)].shape))
+#        zl = np.matmul(parameters['W'+str(i)], x0) + parameters['b'+str(i)]
+#        x0 = relu(zl)
+#        caches.append(zl)
+#
+#    # Output layer Activation is sigmoid        
+#    AL = sigmoid(x0)    
+
     x0 = X
-    caches = []
+    caches = {}
+#    caches = []
     # Gotta save the inputs as the first activations
-    caches.append(x0)
+    caches["Z0"]=x0
 
     for i in range(1, int(len(parameters.keys())/2)+1):
         print('Fwd prop Layer..'+str(i)+'...shape'+str(parameters['W'+str(i)].shape))
         zl = np.matmul(parameters['W'+str(i)], x0) + parameters['b'+str(i)]
         x0 = relu(zl)
-        caches.append(zl)
+        caches["Z"+str(i)]=x0
+        caches['W'+str(i)]=parameters['W'+str(i)]
+        caches['b'+str(i)]=parameters['b'+str(i)]        
 
     # Output layer Activation is sigmoid        
     AL = sigmoid(x0)    

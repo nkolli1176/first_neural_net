@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib as plt
 
 ### EXAMPLE layer dimensions ###
-layers_dims = [12288, 20, 7, 5, 1] #  4-layer model
+layers_dims = [12288, 20, 13, 7, 5, 1] #  5-layer model
 
 ## Initialize all weights for all layers
 def initialize_parameters_deep(layers_dims):
@@ -42,20 +42,23 @@ def relu(a):
 # Perform forward propagation
     # NEEDS UPDATE: last activation, should be linear and multi-hot(!)
 def L_model_forward(X, parameters):
+
     x0 = X
-    caches = []
-    
+    caches = {}
+    # Gotta save the inputs as the first activations
+    caches["Z0"]=x0
+
     for i in range(1, int(len(parameters.keys())/2)+1):
-        print('Processing Layer..'+str(i))
-        al = np.matmul(parameters['W'+str(i)], x0) + parameters['b'+str(i)]
-        x0 = relu(al)
-        
-        caches.append(x0)
-        
+        print('Fwd prop Layer..'+str(i)+'...shape'+str(parameters['W'+str(i)].shape))
+        zl = np.matmul(parameters['W'+str(i)], x0) + parameters['b'+str(i)]
+        x0 = relu(zl)
+        caches["Z"+str(i)]=x0
+        caches['W'+str(i)]=parameters['W'+str(i)]
+        caches['b'+str(i)]=parameters['b'+str(i)]        
+
+    # Output layer Activation is sigmoid        
     AL = sigmoid(x0)    
-    caches.append(AL)
-    # Output layer here is sigmoid
-    
+     
     return AL, caches
 
 # Cost function: Logistic regression for now
@@ -67,10 +70,41 @@ def compute_cost(AL, Y):
     cost = -np.sum(np.log(1-a0) + np.log(a1))
     return cost
 
+# Back prop
 def L_model_backward(AL, Y, caches):
+
+    grads = {}
+    m = Y.shape[0]
+    numlayers = int(np.floor(len(caches)/3))   
+#    print(m)
+    da_next = np.sum(-np.divide(-Y[np.nonzero(Y==1)], AL[np.nonzero(Y==1)])) + np.sum(np.divide((1-Y[np.nonzero(Y==0)]), (1-AL[np.nonzero(Y==0)])))
+    da_next = da_next/m
+#    print(numlayers)
+    for i in range(numlayers, 0, -1):
+        gprime = np.zeros(caches["Z"+str(i)].shape)
+        gprime[np.nonzero(caches["Z"+str(i)])] = caches["Z"+str(i)][np.nonzero(caches["Z"+str(i)])]
+
+        dz = np.multiply(da_next, gprime)
+        dW = 1/m * np.matmul(dz, np.transpose(relu(caches["Z"+str(i-1)])))
+        db = 1/m * np.sum(dz, axis=1, keepdims=True)
+        da_prev = np.matmul(np.transpose(caches["W"+str(i)]), dz)
+        print("Back prop Layer .."+str(i)+"...dW shape.."+str(dW.shape))
+        
+        da_next = da_prev
+        grads["dW"+str(i)] = dW
+        grads["db"+str(i)] = db
+
+        
     return grads
 
+# Update parameters, use gradients and learning_rate
 def update_parameters(parameters, grads, learning_rate):
+
+    for i in range(1, int(len(parameters.keys())/2)+1):
+        print('Updating Layer..'+str(i))
+        parameters['W'+str(i)] = parameters['W'+str(i)] - (learning_rate * grads['dW'+str(i)])
+        parameters['b'+str(i)] = parameters['b'+str(i)] - (learning_rate * grads['db'+str(i)])
+
     return parameters
 
 
@@ -138,3 +172,9 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 30
     return parameters
 
  
+# Next steps
+#    1. Find dataset, split into test, validation and training sets
+#    2. Run training set, get new params
+#    3. Run hyper-param optimization using validation
+#    4. Run on test set with final params
+    
