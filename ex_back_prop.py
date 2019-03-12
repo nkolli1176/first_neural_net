@@ -17,7 +17,7 @@ caches:
 """
 
 import numpy as np
-#import ex_compute_cost
+import ex_compute_cost
 import ex_fwd_prop
 import ex_init_layer_weights
 
@@ -28,11 +28,21 @@ def relu(a):
 
 def L_model_backward(AL, Y, caches):
 
+    # Condition the shapes so that output and labels align
+    Y = np.reshape(Y, (len(Y),1))
+    AL = np.reshape(AL, (AL.shape[0] * AL.shape[1],1))
+
     grads = {}
     m = Y.shape[0]
     numlayers = int(np.floor(len(caches)/3))   
 #    print(m)
-    da_next = np.sum(-np.divide(-Y[np.nonzero(Y==1)], AL[np.nonzero(Y==1)])) + np.sum(np.divide((1-Y[np.nonzero(Y==0)]), (1-AL[np.nonzero(Y==0)])))
+    tmp_al_1 = AL[np.nonzero(Y==1)]
+    tmp_al_1[tmp_al_1 == 0] = 0.01
+
+    tmp_al_0 = AL[np.nonzero(Y==0)]
+    tmp_al_0[tmp_al_0 == 1] = 1 - 0.01
+    
+    da_next = np.sum(-np.divide(-Y[np.nonzero(Y==1)], tmp_al_1)) + np.sum(np.divide((1-Y[np.nonzero(Y==0)]), (1-tmp_al_0)))
     da_next = da_next/m
 #    print(numlayers)
     for i in range(numlayers, 0, -1):
@@ -43,7 +53,7 @@ def L_model_backward(AL, Y, caches):
         dW = 1/m * np.matmul(dz, np.transpose(relu(caches["Z"+str(i-1)])))
         db = 1/m * np.sum(dz, axis=1, keepdims=True)
         da_prev = np.matmul(np.transpose(caches["W"+str(i)]), dz)
-        print("Back prop Layer .."+str(i)+"...dW shape.."+str(dW.shape))
+#        print("Back prop Layer .."+str(i)+"...dW shape.."+str(dW.shape))
         
         da_next = da_prev
         grads["dW"+str(i)] = dW
@@ -51,22 +61,31 @@ def L_model_backward(AL, Y, caches):
 
         
     return grads
-# Test the  function
-#layers = [12288, 20, 13, 7, 5, 1] #  5-layer model
-#
-#params = ex_init_layer_weights.initialize_parameters_deep(layers)
-#X = np.random.rand(layers[0],10)
-#
-#ex_AL, ex_caches = ex_fwd_prop.L_model_forward(X, params)
-##print(ex_AL.shape)
-##print(len(ex_caches))
-#out = np.random.rand(1000,1)
-#y = np.floor(np.random.rand(1000,1)+0.5)
-##c = ex_compute_cost.compute_cost(out, y)
-##print(c)
-#grads = L_model_backward(out, y, ex_caches)
-##print(len(grads))
-##for j in range(1, int(len(grads)/2)+1):
-##    print(grads["dW"+str(j)].shape)
-##    print(grads["db"+str(j)].shape)
-#    
+
+def main():
+    # Test the  function
+    layers = [12288, 20, 13, 7, 5, 1] #  5-layer model
+    
+    params = ex_init_layer_weights.initialize_parameters_deep(layers)
+    X = np.random.rand(layers[0],10)
+    
+    ex_AL, ex_caches = ex_fwd_prop.L_model_forward(X, params)
+    #print(ex_AL.shape)
+    #print(len(ex_caches))
+    out = np.random.rand(1000,1)
+    y = np.floor(np.random.rand(1000,1)+0.5)
+    #c = ex_compute_cost.compute_cost(out, y)
+    #print(c)
+    grads = L_model_backward(out, y, ex_caches)
+    print(len(grads))
+    #for j in range(1, int(len(grads)/2)+1):
+    #    print(grads["dW"+str(j)].shape)
+    #    print(grads["db"+str(j)].shape)
+        
+
+    
+    
+if __name__ == "__main__":
+    main()
+
+

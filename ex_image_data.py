@@ -23,7 +23,7 @@ def get_imlist(path):
 def AssignImageData(folder):
 
     np.random.seed(1)
-    im_1s = get_imlist(folder+'train/1')
+    im_1s = get_imlist(folder+'test/1')
     x_1s = []
     y_1s = []
     
@@ -34,7 +34,7 @@ def AssignImageData(folder):
         x_1s.append(im1d)
         y_1s.append(np.ones(1,))
 
-    im_0s = get_imlist(folder+'train/0')
+    im_0s = get_imlist(folder+'test/0')
     x_0s = []
     y_0s = []
     
@@ -46,11 +46,15 @@ def AssignImageData(folder):
 
     X_train = np.transpose(np.asarray(x_1s + x_0s))
     Y_train = np.transpose(np.asarray(y_1s + y_0s))
+    
+    np.savetxt('X_test.dat', X_train)
+    np.savetxt('Y_test.dat', Y_train)
+    
 
     print(X_train.shape)
     print(Y_train.shape)
     print(Y_train[0,1])
-    print(Y_train[0,12502])
+    print(Y_train[0,2602])
 
 #    print(len(X_train))
 #    print(X_train[1].shape)
@@ -62,5 +66,9 @@ def AssignImageData(folder):
     train, test = [], []
     return train, test
 
-foldername = '/Users/administrator/Downloads/denoise/32/'
-X, X_test = AssignImageData(foldername)
+def main():
+    foldername = '/Users/administrator/Downloads/denoise/32/'
+    X, X_test = AssignImageData(foldername)
+
+if __name__ == "__main__":
+    main()
