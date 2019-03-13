@@ -32,7 +32,7 @@ def relu(a):
     # NEEDS UPDATE: last activation, should be linear and multi-hot(!)
 
 
-def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 20, print_cost=1):#lr was 0.009
+def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 4, print_cost=1):#lr was 0.009
     """
     Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
     
@@ -104,7 +104,7 @@ def main():
     
     dim_1 = X_train.shape[0]
     ### Layer dimensions ###
-    layers_dims = [dim_1, 20, 13, 7, 5, 1] #  5-layer model
+    layers_dims = [dim_1, 7, 5, 1] #  5-layer model
     print('Layer dims...'+str(layers_dims))
 
     newparams = L_layer_model(X_train, Y_train, layers_dims)

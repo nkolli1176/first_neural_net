@@ -14,16 +14,19 @@ import numpy as np
 def compute_cost(AL, Y):
     
 #    cost = np.sum(np.multiply((1-Y),np.log((1-AL))) + np.multiply((Y),np.log((AL))))
-    Y = np.reshape(Y, (len(Y),1))
-    AL = np.reshape(AL, (AL.shape[0] * AL.shape[1],1))
+    m = len(Y.flatten())
+    # Condition the shapes so that output and labels align
+    Y = np.reshape(Y, (1,m))
+    AL = np.reshape(AL, (1,m))
     
-    a0 = AL[np.nonzero(Y==0)]
-    a1 = AL[np.nonzero(Y==1)]
+    a0 = AL[Y==0]
+    a1 = AL[Y==1]
     
     a0[a0==1] = 0.00001
     a1[a1==0] = 0.00001
     
-    cost = -np.sum(np.log(1-a0)) - np.sum(np.log(a1))
+    cost = -1/m * (np.sum(np.log(1-a0)) + np.sum(np.log(a1)))
+    
     return cost
 
 def main():

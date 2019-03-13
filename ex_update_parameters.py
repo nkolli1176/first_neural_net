@@ -27,12 +27,16 @@ def main():
     X = np.random.rand(layers[0],10)
     
     ex_AL, ex_caches = ex_fwd_prop.L_model_forward(X, params)
+#    print(ex_caches['Z4'])    
     out = np.random.rand(1000,1)
     y = np.floor(np.random.rand(1000,1)+0.5)
     grads = ex_back_prop.L_model_backward(out, y, ex_caches)
+    print(grads['db4'])
     
     newparams = update_parameters(params, grads, 0.008)
     print(len(newparams))
+#    print(params['b3'] - newparams['b3'])
+#    print(newparams['b4'])
 
     
 if __name__ == "__main__":
