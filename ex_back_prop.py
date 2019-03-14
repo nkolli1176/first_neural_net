@@ -34,34 +34,36 @@ def L_model_backward(AL, Y, caches):
     Y = np.reshape(Y, (1,m))
     AL = np.reshape(AL, (1,m))
     numlayers = int(np.floor(len(caches)/3))   
-    print('Num layers...'+str(numlayers))
-#    tmp_al_1 = AL[np.nonzero(Y==1)]
-    tmp_al_1 = AL[Y==1]
-    tmp_al_1[tmp_al_1 == 0] = 0.0001
-#    print(tmp_al_1.shape)
 
-#    tmp_al_0 = AL[np.nonzero(Y==0)]
-    tmp_al_0 = AL[Y==0]
-    tmp_al_0[tmp_al_0 == 1] = 1 - 0.0001
+    AL[AL==0] = 0.001
+    AL[AL==1] = 0.999
 
-    da_next = -np.sum(np.divide(1, tmp_al_1)) + np.sum(np.divide(1, (1-tmp_al_0)))
-#    da_next = da_next/m
+    print('Nans in AL.....'+str(np.count_nonzero(np.isnan(AL))))    
+    
+    da_next = -np.sum(np.divide(1-Y, 1-AL)) + np.sum(np.divide(Y, AL))
 
     for i in range(numlayers, 0, -1):
-#        print(da_next)        
-        gprime = np.zeros(caches["Z"+str(i)].shape)
-#        gprime[caches["Z"+str(i)] > 0] = caches["Z"+str(i)][caches["Z"+str(i)] > 0]
-        gprime[caches["Z"+str(i)] > 0] = 1
+#        print(da_next)    
+        da_next = np.divide(da_next, m)
+
+        gprime = np.zeros(caches['Z'+str(i)].shape)
+#        gprime[caches['Z'+str(i)] > 0] = caches['Z'+str(i)][caches['Z'+str(i)] > 0]
+        gprime[caches['Z'+str(i)] > 0] = 1
         
         dz = np.multiply(da_next, gprime)
-        dW = 1/m * np.matmul(dz, np.transpose(relu(caches["Z"+str(i-1)])))
-        db = 1/m * np.sum(dz, axis=1, keepdims=True)
-        da_prev = np.matmul(np.transpose(caches["W"+str(i)]), dz)
-        print("Back prop Layer .."+str(i)+"...dW shape.."+str(dW.shape))
+        temp_al_1 = np.transpose(relu(caches['Z'+str(i-1)]))
+        dW = np.divide(np.nan_to_num(np.matmul(dz, temp_al_1), False), m)
+        db = np.divide(np.sum(dz, axis=1, keepdims=True), m)
+        da_prev = np.matmul(np.transpose(caches['W'+str(i)]), dz)
+#        print('Back prop Layer ..'+str(i)+'...dW shape..'+str(dW.shape))
         
         da_next = da_prev
-        grads["dW"+str(i)] = dW
-        grads["db"+str(i)] = db
+        grads['dW'+str(i)] = dW
+        grads['db'+str(i)] = db
+        print('Nans before dW....'+str(np.count_nonzero(np.isnan(np.matmul(dz, temp_al_1)))))    
+
+        print('Nans in dW.....'+str(dW.shape)+'...'+str(np.count_nonzero(np.isnan(dW))))    
+        print('Nans in db.....'+str(db.shape)+'...'+str(np.count_nonzero(np.isnan(db))))    
 
         
     return grads
@@ -78,13 +80,13 @@ def main():
     #print(len(ex_caches))
     out = np.random.rand(1000,1)
     y = np.floor(np.random.rand(1000,1)+0.5)
-#    c = ex_compute_cost.compute_cost(out, y)
-#    print(c)
+    c = ex_compute_cost.compute_cost(out, y)
+    print(c)
     grads = L_model_backward(out, y, ex_caches)
     print(len(grads))
     #for j in range(1, int(len(grads)/2)+1):
-    #    print(grads["dW"+str(j)].shape)
-    #    print(grads["db"+str(j)].shape)
+    #    print(grads['dW'+str(j)].shape)
+    #    print(grads['db'+str(j)].shape)
         
 
     

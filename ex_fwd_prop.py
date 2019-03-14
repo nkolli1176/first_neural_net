@@ -24,11 +24,12 @@ def L_model_forward(X, parameters):
     caches = {}
 #    caches = []
     # Gotta save the inputs as the first activations
-    caches["Z0"] = x0
+    caches['Z0'] = x0
 #    print('Input size..'+str(x0.shape))
 
     for i in range(1, int(len(parameters.keys())/2)+1):
         zl = np.matmul(parameters['W'+str(i)], x0) + parameters['b'+str(i)]
+#        print('Nans in zl.....'+str(zl.shape)+'...'+str(np.count_nonzero(np.isnan(zl))))    
         if (i == int(len(parameters.keys())/2)):
             # Output layer Activation is sigmoid        
             x0 = sigmoid(zl)
@@ -36,8 +37,8 @@ def L_model_forward(X, parameters):
         else:            
 #            print('Fwd prop Layer..'+str(i)+'...Relu..'+str(parameters['W'+str(i)].shape))            
             x0 = relu(zl)
-            
-        caches["Z"+str(i)]=zl
+
+        caches['Z'+str(i)]=zl
         caches['W'+str(i)]=parameters['W'+str(i)]
         caches['b'+str(i)]=parameters['b'+str(i)]        
 

@@ -12,9 +12,9 @@ Functions are written and tested separately where possible
 import numpy as np
 import matplotlib.pyplot as plt
 # functions to implement the model
+import ex_fwd_prop
 import ex_init_layer_weights
 import ex_update_parameters
-import ex_fwd_prop
 import ex_back_prop
 import ex_compute_cost
 
@@ -104,7 +104,7 @@ def main():
     
     dim_1 = X_train.shape[0]
     ### Layer dimensions ###
-    layers_dims = [dim_1, 7, 5, 1] #  5-layer model
+    layers_dims = [dim_1, 20, 7, 5, 1] #  5-layer model
     print('Layer dims...'+str(layers_dims))
 
     newparams = L_layer_model(X_train, Y_train, layers_dims)
