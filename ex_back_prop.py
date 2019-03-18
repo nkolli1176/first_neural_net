@@ -8,10 +8,12 @@ Back prop module, for logistic regression for now
 AL: output activations for each of m vector inputs (1,m)
 Y: labeled outputs for each of m vector inputs (1,m)
 caches: 
-    from Fwd prop, the Zs of each layer, including the input vector x0 (x0,m)
+    from Fwd prop, 
+    As of each layer, including the input vector x0 (x0,m)
+    Zs of each layer
     Parameters W (nl+1), (nl)
     Parameters b (nl+1), 1
-    So the count is numlayers*3 + 1, because the input Z stands alone withouta corresponding W and b
+    So the count is numlayers*4 + 1, because the input A0 stands alone 
     
 @author: Naveen Kolli
 """
@@ -20,11 +22,7 @@ import numpy as np
 import ex_compute_cost
 import ex_fwd_prop
 import ex_init_layer_weights
-
-def relu(a):
-    rel = np.maximum(a, 0)
-    return rel
-
+import ex_activations
 
 def L_model_backward(AL, Y, caches):
 
@@ -33,39 +31,41 @@ def L_model_backward(AL, Y, caches):
     # Condition the shapes so that output and labels align
     Y = np.reshape(Y, (1,m))
     AL = np.reshape(AL, (1,m))
-    numlayers = int(np.floor(len(caches)/3))   
+    numlayers = int(np.floor(len(caches)/4))   
 
-    AL[AL==0] = 0.001
-    AL[AL==1] = 0.999
+    AL[AL<=0.001] = 0.001
+    AL[AL>=0.999] = 0.999
 
-    print('Nans in AL.....'+str(np.count_nonzero(np.isnan(AL))))    
-    
-    da_next = -np.sum(np.divide(1-Y, 1-AL)) + np.sum(np.divide(Y, AL))
+    da_next = np.sum(np.divide(1-Y, 1-AL)) - np.sum(np.divide(Y, AL))
 
     for i in range(numlayers, 0, -1):
 #        print(da_next)    
         da_next = np.divide(da_next, m)
+#        print('Max value in da_next..'+str(np.max(da_next.flatten())))
+        # Last layer has a different activation
+        if (i == numlayers):
+            gprime_curr = ex_activations.sigmoidDeriv(caches['Z'+str(i)])
+        else:
+            gprime_curr = ex_activations.reluDerivative(caches['Z'+str(i)])
 
-        gprime = np.zeros(caches['Z'+str(i)].shape)
-#        gprime[caches['Z'+str(i)] > 0] = caches['Z'+str(i)][caches['Z'+str(i)] > 0]
-        gprime[caches['Z'+str(i)] > 0] = 1
-        
-        dz = np.multiply(da_next, gprime)
-        temp_al_1 = np.transpose(relu(caches['Z'+str(i-1)]))
-        dW = np.divide(np.nan_to_num(np.matmul(dz, temp_al_1), False), m)
+        dz = np.multiply(da_next, gprime_curr)
+
+        # Activations coming into the first layer are the inputs
+        temp_al_prev = np.transpose(caches['A'+str(i-1)])
+
+        dW = np.divide(np.matmul(dz, temp_al_prev), m)
         db = np.divide(np.sum(dz, axis=1, keepdims=True), m)
+        
         da_prev = np.matmul(np.transpose(caches['W'+str(i)]), dz)
-#        print('Back prop Layer ..'+str(i)+'...dW shape..'+str(dW.shape))
         
         da_next = da_prev
         grads['dW'+str(i)] = dW
         grads['db'+str(i)] = db
-        print('Nans before dW....'+str(np.count_nonzero(np.isnan(np.matmul(dz, temp_al_1)))))    
+#        print('Activations of prev layer..', caches['A'+str(i-1)].shape)
+#        print('Nans in dW.....'+str(dW.shape)+'...'+str(np.count_nonzero(np.isnan(dW))))    
+#        print('Nans in db.....'+str(db.shape)+'...'+str(np.count_nonzero(np.isnan(db))))    
 
-        print('Nans in dW.....'+str(dW.shape)+'...'+str(np.count_nonzero(np.isnan(dW))))    
-        print('Nans in db.....'+str(db.shape)+'...'+str(np.count_nonzero(np.isnan(db))))    
-
-        
+    print(np.transpose(grads['dW'+str(numlayers)]))    
     return grads
 
 def main():
@@ -84,12 +84,17 @@ def main():
     print(c)
     grads = L_model_backward(out, y, ex_caches)
     print(len(grads))
-    #for j in range(1, int(len(grads)/2)+1):
-    #    print(grads['dW'+str(j)].shape)
-    #    print(grads['db'+str(j)].shape)
+    print(np.transpose(params['W3']))
+    print(np.transpose(grads['dW3']))
+#    print(grads['db'+str(j)].shape)
         
 
-    
+#    z = np.random.rand(3,3)-0.5
+#    a = reluDerivative(z)
+#    print(a)
+#    gprime = np.zeros(z.shape)
+#    gprime[z > 0] = 1
+#    print(gprime)
     
 if __name__ == "__main__":
     main()

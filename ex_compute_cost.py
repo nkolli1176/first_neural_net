@@ -19,8 +19,8 @@ def compute_cost(AL, Y):
     Y = np.reshape(Y, (1,m))
     AL = np.reshape(AL, (1,m))
     
-    AL[AL==0] = 0.001
-    AL[AL==1] = 0.999
+    AL[AL<=0.001] = 0.0001
+    AL[AL>=0.999] = 0.9999
     
     cost = -1/m * (np.sum(np.multiply(1-Y, np.log(1-AL))) + np.sum(np.multiply(Y, np.log(AL))))
     

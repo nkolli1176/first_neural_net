@@ -11,6 +11,8 @@ Functions are written and tested separately where possible
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from PIL import Image
+import time
 # functions to implement the model
 import ex_fwd_prop
 import ex_init_layer_weights
@@ -18,21 +20,9 @@ import ex_update_parameters
 import ex_back_prop
 import ex_compute_cost
 
-## Sigmoid Activation function
-def sigmoid(z):
-    sig = 1/(1 + np.exp(-z))
-    return sig
-
-## RELU Activation function
-def relu(a):
-    rel = np.maximum(a, 0)
-    return rel
-
-# Perform forward propagation
-    # NEEDS UPDATE: last activation, should be linear and multi-hot(!)
 
 
-def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 4, print_cost=1):#lr was 0.009
+def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 3, print_cost=1):#lr was 0.009
     """
     Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
     
@@ -49,7 +39,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 4,
     """
 
     # NK: keep this for now, for testing the model
-    np.random.seed(1)
+#    np.random.seed(1)
     costs = []                         # keep track of cost
     
     # Parameters initialization. (≈ 1 line of code)
@@ -83,28 +73,56 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 4,
         # Print the cost every 100 training example
         if print_cost and i % 1 == 0:
             print ("Cost after iteration %i: %f" %(i, cost))
-        if print_cost and i % 1 == 0:
             costs.append(cost)
+            # plot the cost
+            plt.plot(np.squeeze(costs))
+            plt.ylabel('cost')
+            plt.xlabel('iterations (per tens)')
+            plt.title("Learning rate =" + str(learning_rate))
+            plt.show()
             
-    # plot the cost
-    plt.plot(np.squeeze(costs))
-    plt.ylabel('cost')
-    plt.xlabel('iterations (per tens)')
-    plt.title("Learning rate =" + str(learning_rate))
-    plt.show()
-    
+            
+##    # plot the cost
+#    plt.plot(np.squeeze(costs))
+#    plt.ylabel('cost')
+#    plt.xlabel('iterations (per tens)')
+#    plt.title("Learning rate =" + str(learning_rate))
+#    plt.show()
+#    
     return parameters
 
 def main():
     # Load dataset 
     X_train = np.loadtxt('Data/X_train.dat')
     Y_train = np.loadtxt('Data/Y_train.dat')
- 
-#    X_train = X_train > 0.2
+    
+    # Number of examples
+    m = X_train.shape[1]
+    
+    # Shuffle the data
+    marr = np.arange(m-1)
+    np.random.shuffle(marr)
+    X_train = X_train[:,marr]
+    Y_train = Y_train[marr]
+
+#    # To view the images, make sure labeling is correct
+#    imgi = int(input('Enter an index..'))
+#    while (imgi != 99):
+#        print('Index chosen is...', imgi)
+#        print('Label is...', Y_train[imgi])
+#        reimg = Image.fromarray(np.reshape(X_train[:,imgi],(32,32)))
+#        t_size = (320,320)
+#        reimg = reimg.resize(t_size, Image.ANTIALIAS)
+#        reimg.show()
+#        imgi = int(input('Enter an index..'))
+    
+    X_train = X_train/255
+#    X_train[X_train <= 0.4] = 0
+#    X_train[X_train > 0.4] = 1
     
     dim_1 = X_train.shape[0]
     ### Layer dimensions ###
-    layers_dims = [dim_1, 20, 7, 5, 1] #  5-layer model
+    layers_dims = [dim_1, 20, 13, 5, 1] #  5-layer model
     print('Layer dims...'+str(layers_dims))
 
     newparams = L_layer_model(X_train, Y_train, layers_dims)

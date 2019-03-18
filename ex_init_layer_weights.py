@@ -25,3 +25,13 @@ def initialize_parameters_deep(layers_dims):
         
     return parameters 
 
+def main():
+    layers = [1000, 40, 30, 5, 1]
+    params = initialize_parameters_deep(layers)
+    print(len(params))
+    print(params.keys())
+    print(params['W4'].shape)
+    
+if __name__ == "__main__":
+    main()
+
