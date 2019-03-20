@@ -37,10 +37,11 @@ def L_model_backward(AL, Y, caches):
     AL[AL>=0.999] = 0.999
 
     da_next = np.sum(np.divide(1-Y, 1-AL)) - np.sum(np.divide(Y, AL))
+    da_next = np.divide(da_next, m)
 
     for i in range(numlayers, 0, -1):
 #        print(da_next)    
-        da_next = np.divide(da_next, m)
+#        da_next = np.divide(da_next, m)
 #        print('Max value in da_next..'+str(np.max(da_next.flatten())))
         # Last layer has a different activation
         if (i == numlayers):
@@ -65,7 +66,7 @@ def L_model_backward(AL, Y, caches):
 #        print('Nans in dW.....'+str(dW.shape)+'...'+str(np.count_nonzero(np.isnan(dW))))    
 #        print('Nans in db.....'+str(db.shape)+'...'+str(np.count_nonzero(np.isnan(db))))    
 
-    print(np.transpose(grads['dW'+str(numlayers)]))    
+#    print(np.transpose(grads['dW'+str(numlayers)]))    
     return grads
 
 def main():
