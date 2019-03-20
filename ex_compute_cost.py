@@ -28,7 +28,11 @@ def compute_cost(AL, Y):
 
 def main():
     out = np.random.rand(1000,1)
-    y = np.floor(np.random.rand(1000,1)+0.5)
+    out[out <= 0.5] = 0
+    out[out > 0.5] = 1
+    
+#    out = np.floor(np.random.rand(20000 ,1)+0.5)
+    y = np.floor(np.random.rand(1000 ,1)+0.5)
     print(min(y), max(y), min(out), max(out))
     c = compute_cost(out, y)
     print(c)

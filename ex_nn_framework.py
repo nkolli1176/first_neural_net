@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import time
+import copy
 # functions to implement the model
 import ex_fwd_prop
 import ex_init_layer_weights
@@ -22,7 +23,7 @@ import ex_compute_cost
 
 
 
-def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 3, print_cost=1):#lr was 0.009
+def L_layer_model(X, Y, layers_dims, learning_rate = 0.0001, num_iterations = 3000, print_cost=1):#lr was 0.009
     """
     Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
     
@@ -39,39 +40,30 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 3,
     """
 
     # NK: keep this for now, for testing the model
-#    np.random.seed(1)
+    np.random.seed(1)
     costs = []                         # keep track of cost
     
-    # Parameters initialization. (≈ 1 line of code)
-    ### START CODE HERE ###
+    # Parameters initialization
     parameters = ex_init_layer_weights.initialize_parameters_deep(layers_dims)
-    ### END CODE HERE ###
+    newparams = copy.deepcopy(parameters)
     
     # Loop (gradient descent)
     for i in range(0, num_iterations): 
 
         # Forward propagation: [LINEAR -> RELU]*(L-1) -> LINEAR -> SIGMOID.
-        ### START CODE HERE ### (≈ 1 line of code)
-        AL, caches = ex_fwd_prop.L_model_forward(X, parameters)
-        ### END CODE HERE ###
+        AL, caches = ex_fwd_prop.L_model_forward(X, newparams)
         
         # Compute cost.
-        ### START CODE HERE ### (≈ 1 line of code)
         cost = ex_compute_cost.compute_cost(AL, Y)
-        ### END CODE HERE ###
     
         # Backward propagation.
-        ### START CODE HERE ### (≈ 1 line of code)
         grads = ex_back_prop.L_model_backward(AL, Y, caches)
-        ### END CODE HERE ###
  
         # Update parameters.
-        ### START CODE HERE ### (≈ 1 line of code)
-        parameters = ex_update_parameters.update_parameters(parameters, grads, learning_rate)
-        ### END CODE HERE ###
+        newparams = ex_update_parameters.update_parameters(newparams, grads, learning_rate)
                 
-        # Print the cost every 100 training example
-        if print_cost and i % 1 == 0:
+        # Print the cost every nth training cycle
+        if print_cost and i % 30 == 0:
             print ("Cost after iteration %i: %f" %(i, cost))
             costs.append(cost)
             # plot the cost
@@ -80,7 +72,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 3,
             plt.xlabel('iterations (per tens)')
             plt.title("Learning rate =" + str(learning_rate))
             plt.show()
-            
+
             
 ##    # plot the cost
 #    plt.plot(np.squeeze(costs))
@@ -89,9 +81,10 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.0075, num_iterations = 3,
 #    plt.title("Learning rate =" + str(learning_rate))
 #    plt.show()
 #    
-    return parameters
+    return parameters, newparams
 
-def main():
+def train_data(layers_dims):
+    
     # Load dataset 
     X_train = np.loadtxt('Data/X_train.dat')
     Y_train = np.loadtxt('Data/Y_train.dat')
@@ -120,19 +113,84 @@ def main():
 #    X_train[X_train <= 0.4] = 0
 #    X_train[X_train > 0.4] = 1
     
-    dim_1 = X_train.shape[0]
-    ### Layer dimensions ###
-    layers_dims = [dim_1, 20, 13, 5, 1] #  5-layer model
     print('Layer dims...'+str(layers_dims))
 
-    newparams = L_layer_model(X_train, Y_train, layers_dims)
+    params, newparams = L_layer_model(X_train, Y_train, layers_dims)
     print('Optimization done..'+str(len(newparams)))
     
     for i in range(1,int(len(newparams.keys())/2)+1):
         np.savetxt('Data/Out_W'+str(i), newparams['W'+str(i)])
         np.savetxt('Data/Out_b'+str(i), newparams['b'+str(i)])
 
-    print('Program done..')
+    
+    print(np.max(newparams['W4'] - params['W4']))
+    print(np.max(newparams['W3'] - params['W3']))
+    print(np.max(newparams['W2'] - params['W2']))
+    print(np.max(newparams['W1'] - params['W1']))
+
+def test_data(layers_dims):
+    
+    # Load test data
+    X_test = np.loadtxt('Data/X_test.dat')
+    Y_test = np.loadtxt('Data/Y_test.dat')
+    
+    # Number of examples
+    m = X_test.shape[1]
+    
+    # Shuffle the data
+    marr = np.arange(m-1)
+    np.random.shuffle(marr)
+    X_test = X_test[:,marr]
+    Y_test = Y_test[marr]
+
+#    # To view the images, make sure labeling is correct
+#    imgi = int(input('Enter an index..'))
+#    while (imgi != 99):
+#        print('Index chosen is...', imgi)
+#        print('Label is...', Y_train[imgi])
+#        reimg = Image.fromarray(np.reshape(X_train[:,imgi],(32,32)))
+#        t_size = (320,320)
+#        reimg = reimg.resize(t_size, Image.ANTIALIAS)
+#        reimg.show()
+#        imgi = int(input('Enter an index..'))
+    
+    X_test = X_test/255
+#    X_train[X_train <= 0.4] = 0
+#    X_train[X_train > 0.4] = 1
+    
+    num_layers = len(layers_dims)
+
+    ### Load parameters from training
+    parameters = {}
+    for i in range(num_layers-1):
+        parameters['W'+str(i+1)] = np.loadtxt('Data/Out_W'+str(i+1))
+        parameters['b'+str(i+1)] = np.loadtxt('Data/Out_b'+str(i+1))
+        parameters['b'+str(i+1)] = np.reshape(parameters['b'+str(i+1)], (len(parameters['b'+str(i+1)]), 1))
+
+    ### Run forward prop to get the output activations    
+    AL, caches = ex_fwd_prop.L_model_forward(X_test, parameters)
+    
+    ### Convert AL to binary calls
+    AL[AL <= 0.5] = 0
+    AL[AL > 0.5] = 1
+    
+    ## Calculate success percentage
+    success = 1 - np.count_nonzero(Y_test - AL)/len(Y_test)
+    
+    return success
+
+def main():
+
+    # Define input feature length - number of pixels in the images here    
+    dim_1 = 1024
+    layers_dims = [dim_1, 20, 13, 5, 1] #  5-layer model
+
+    ### To train data
+#    train_data()
+    
+    ### Test data
+    success = test_data(layers_dims)
+    print('Success ratio is..', success)
     
 if __name__ == "__main__":
     main()

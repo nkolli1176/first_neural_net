@@ -20,17 +20,29 @@ def initialize_parameters_deep(layers_dims):
     for i in range(num_layers-1):
         parameters['W'+str(i+1)] = np.random.randn(layers_dims[i+1], layers_dims[i])
         parameters['b'+str(i+1)] = np.random.randn(layers_dims[i+1], 1)
-#        print(parameters['W'+str(i+1)].shape)
-#        print(parameters['b'+str(i+1)].shape)
+        print(parameters['W'+str(i+1)].shape)
+        print(parameters['b'+str(i+1)].shape)
         
     return parameters 
 
 def main():
-    layers = [1000, 40, 30, 5, 1]
-    params = initialize_parameters_deep(layers)
-    print(len(params))
-    print(params.keys())
-    print(params['W4'].shape)
+#    layers = [1000, 40, 30, 5, 1]
+#    params = initialize_parameters_deep(layers)
+#    print(len(params))
+#    print(params.keys())
+#    print(params['W4'].shape)
+#    print(np.max(params['W3']))
+
+    num_layers = 5
+    parameters = {}
+    for i in range(num_layers-1):
+        parameters['W'+str(i+1)] = np.loadtxt('Data/Out_W'+str(i+1))
+        parameters['W'+str(i+1)] = np.asarray(parameters['W'+str(i+1)])
+        parameters['b'+str(i+1)] = np.loadtxt('Data/Out_b'+str(i+1))
+        parameters['b'+str(i+1)] = np.asarray(parameters['b'+str(i+1)])
+        
+        print(parameters['W'+str(i+1)].shape[0], parameters['W'+str(i+1)].shape[1])
+        print(parameters['b'+str(i+1)].shape)
     
 if __name__ == "__main__":
     main()
