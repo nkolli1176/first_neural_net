@@ -23,7 +23,7 @@ import ex_compute_cost
 
 
 
-def L_layer_model(X, Y, layers_dims, learning_rate = 0.0001, num_iterations = 3000, print_cost=1):#lr was 0.009
+def L_layer_model(X, Y, layers_dims, learning_rate = 0.005, num_iterations = 3000, print_cost=1):#lr was 0.009
     """
     Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
     
@@ -40,7 +40,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.0001, num_iterations = 30
     """
 
     # NK: keep this for now, for testing the model
-    np.random.seed(1)
+#    np.random.seed(1)
     costs = []                         # keep track of cost
     
     # Parameters initialization
@@ -164,16 +164,29 @@ def test_data(layers_dims):
     parameters = {}
     for i in range(num_layers-1):
         parameters['W'+str(i+1)] = np.loadtxt('Data/Out_W'+str(i+1))
+        if (len(parameters['W'+str(i+1)].shape) < 2):
+            parameters['W'+str(i+1)] = np.reshape(parameters['W'+str(i+1)], (1, len(parameters['W'+str(i+1)])))
+            
         parameters['b'+str(i+1)] = np.loadtxt('Data/Out_b'+str(i+1))
-        parameters['b'+str(i+1)] = np.reshape(parameters['b'+str(i+1)], (len(parameters['b'+str(i+1)]), 1))
+        if (len(parameters['b'+str(i+1)].shape) < 1):
+            parameters['b'+str(i+1)] = np.reshape(parameters['b'+str(i+1)], (1, 1))
+        else:
+            parameters['b'+str(i+1)] = np.reshape(parameters['b'+str(i+1)], (len(parameters['b'+str(i+1)]), 1))            
 
     ### Run forward prop to get the output activations    
     AL, caches = ex_fwd_prop.L_model_forward(X_test, parameters)
+    print('AL max is ...', np.max(AL))
+    print('AL min is ...', np.min(AL))
+    print('AL avg is ...', np.mean(AL))
+    print('AL median is ...', np.median(AL))
+    print(AL.shape, Y_test.shape)
+    print((Y_test - AL).shape)
+    print(np.count_nonzero(AL < 0.3))
     
     ### Convert AL to binary calls
     AL[AL <= 0.5] = 0
     AL[AL > 0.5] = 1
-    
+
     ## Calculate success percentage
     success = 1 - np.count_nonzero(Y_test - AL)/len(Y_test)
     
@@ -186,11 +199,11 @@ def main():
     layers_dims = [dim_1, 20, 13, 5, 1] #  5-layer model
 
     ### To train data
-#    train_data()
+    train_data(layers_dims)
     
     ### Test data
-    success = test_data(layers_dims)
-    print('Success ratio is..', success)
+#    success = test_data(layers_dims)
+#    print('Success ratio is..', success)
     
 if __name__ == "__main__":
     main()

@@ -37,7 +37,11 @@ def L_model_forward(X, parameters):
         caches['W'+str(i)]=parameters['W'+str(i)]
         caches['b'+str(i)]=parameters['b'+str(i)]        
 
+    x0[x0 <= 0.001] = 0.001
+    x0[x0 >= 0.999] = 0.999
+
     AL = x0     
+    
 #    print('Caches..', len(caches))
     return AL, caches 
 

@@ -33,11 +33,11 @@ def L_model_backward(AL, Y, caches):
     AL = np.reshape(AL, (1,m))
     numlayers = int(np.floor(len(caches)/4))   
 
-    AL[AL<=0.001] = 0.001
-    AL[AL>=0.999] = 0.999
+#    AL[AL <= 0.001] = 0.001
+#    AL[AL >= 0.999] = 0.999
 
-    da_next = np.sum(np.divide(1-Y, 1-AL)) - np.sum(np.divide(Y, AL))
-    da_next = np.divide(da_next, m)
+    da_next = np.divide(1-Y, 1-AL) - (np.divide(Y, AL))
+#    da_next = np.divide(da_next, m)
 
     for i in range(numlayers, 0, -1):
 #        print(da_next)    
