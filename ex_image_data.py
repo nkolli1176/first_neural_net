@@ -66,9 +66,52 @@ def AssignImageData(folder):
     train, test = [], []
     return train, test
 
+def AssignLabelsImportImages(foldername):
+    
+    imgs = get_imlist(foldername)
+    xs_train = []
+    ys_train = []
+    
+    xs_test = []
+    ys_test = []
+    
+    for im in imgs:
+        myrand = np.random.rand()
+        img = Image.open(im)
+        img = img.resize((64,64), Image.ANTIALIAS)
+        img = np.array(img)        
+        
+        if (myrand <= 0.2):
+            xs_test.append(img.flatten())
+            if ("cat" in os.path.basename(im)):
+                ys_test.append(1)
+            else:
+                ys_test.append(0)
+        else:
+            xs_train.append(img.flatten())
+            if ("cat" in os.path.basename(im)):
+                ys_train.append(1)
+            else:
+                ys_train.append(0)
+            
+    X_train = np.transpose(np.asarray(xs_train))
+    X_test = np.transpose(np.asarray(xs_test))
+     
+    Y_train = np.transpose(np.asarray(ys_train))
+    Y_test = np.transpose(np.asarray(ys_test))
+
+    return X_train, Y_train, X_test, Y_test
+
 def main():
-    foldername = '/Users/administrator/Downloads/denoise/32/'
-    X, X_test = AssignImageData(foldername)
+    foldername = '/Users/administrator/Documents/Python/Data/Kaggle_train/'
+#    X, X_test = AssignImageData(foldername)
+    xs_train, ys_train, xs_test, ys_test = AssignLabelsImportImages(foldername)
+    print(xs_train.shape, ys_train.shape, xs_test.shape, ys_test.shape)
+
+    np.savetxt('X_K_test.dat', xs_test)
+    np.savetxt('Y_K_test.dat', ys_test)
+    np.savetxt('X_K_train.dat', xs_train)
+    np.savetxt('Y_K_train.dat', ys_train)
 
 if __name__ == "__main__":
     main()

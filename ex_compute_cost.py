@@ -9,7 +9,7 @@ NEEDS updating to accommodate linearly varying data
 @author: Naveen Kolli
 """
 import numpy as np
-
+import copy
 # Logistic regression cost for now
 def compute_cost(AL, Y):
     
@@ -21,7 +21,13 @@ def compute_cost(AL, Y):
     
     cost = -1/m * (np.sum(np.multiply(1-Y, np.log(1-AL))) + np.sum(np.multiply(Y, np.log(AL))))
     
-    return cost
+    # Also return success rate
+    x = copy.copy(AL)
+    x[x <= 0.5] = 0
+    x[x > 0.5] = 1
+    success = 1 - (np.count_nonzero(Y - x)/m)
+    
+    return cost, success
 
 def main():
     out = np.random.rand(1000,1)
