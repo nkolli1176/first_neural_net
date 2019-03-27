@@ -23,8 +23,8 @@ def compute_cost(AL, Y):
     
     # Also return success rate
     x = copy.copy(AL)
-    x[x <= 0.5] = 0
-    x[x > 0.5] = 1
+    x[x < 0.5] = 0
+    x[x >= 0.5] = 1
     success = 1 - (np.count_nonzero(Y - x)/m)
     
     return cost, success

@@ -42,45 +42,55 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.001, num_iterations = 300
     # NK: keep this for now, for testing the model
 #    np.random.seed(1)
     costs = []                         # keep track of cost
-    
+    train_successes = []
+    xval_successes = []
     # Parameters initialization
     parameters = ex_init_layer_weights.initialize_parameters_deep(layers_dims)
     newparams = copy.deepcopy(parameters)
+    
+    # Separate ino Training and Cross validation sets
+    m = X.shape[1]
+    xval = int(m/5)
+    X_train = X[:,0:m-xval]
+    Y_train = Y[0:m-xval]
+
+    X_xval = X[:,m-xval+1:]
+    Y_xval = Y[m-xval+1:]
     
     # Loop (gradient descent)
     for i in range(0, num_iterations): 
 
         # Forward propagation: [LINEAR -> RELU]*(L-1) -> LINEAR -> SIGMOID.
-        AL, caches = ex_fwd_prop.L_model_forward(X, newparams)
+        AL, caches = ex_fwd_prop.L_model_forward(X_train, newparams)
         
         # Compute cost.
-        cost, train_success = ex_compute_cost.compute_cost(AL, Y)
+        cost, train_success = ex_compute_cost.compute_cost(AL, Y_train)
     
         # Backward propagation.
-        grads = ex_back_prop.L_model_backward(AL, Y, caches)
+        grads = ex_back_prop.L_model_backward(AL, Y_train, caches)
  
         # Update parameters.
         newparams = ex_update_parameters.update_parameters(newparams, grads, learning_rate)
                 
         # Print the cost every nth training cycle
-        if print_cost and i % 100 == 0:
+        if print_cost and i % 10 == 0:
             print ("Cost after iteration %i: %f" %(i, cost))
             costs.append(cost)
+            train_successes.append(train_success)
+            # Run xval set and compute cost.
+            AL_xval, xval = ex_fwd_prop.L_model_forward(X_xval, newparams)        
+            xval_cost, xval_success = ex_compute_cost.compute_cost(AL_xval, Y_xval)
+            xval_successes.append(xval_success)
             # plot the cost
-#            plt.plot(np.squeeze(costs))
-#            plt.ylabel('cost')
-#            plt.xlabel('iterations (per tens)')
-#            plt.title("Learning rate =" + str(learning_rate))
-#            plt.show()
+            plt.plot(np.squeeze(train_successes))
+            plt.plot(np.squeeze(xval_successes))            
+            plt.ylabel('Success %')
+            plt.xlabel('iterations (per tens)')
+            plt.title("Learning rate =" + str(learning_rate))
+            plt.draw()
+            plt.pause(1)
 
             
-#    # plot the cost
-    plt.plot(np.squeeze(costs))
-    plt.ylabel('cost')
-    plt.xlabel('iterations (per tens)')
-    plt.title("Learning rate =" + str(learning_rate))
-    plt.show()
-#    
     return parameters, newparams, train_success
 
 def train_data(localfolder, layers_dims, learning_rate, num_epochs, print_cost):
@@ -184,11 +194,11 @@ def test_data(localfolder, layers_dims):
 #    print(np.count_nonzero(AL < 0.3))
     
     ### Convert AL to binary calls
-    AL[AL <= 0.5] = 0
-    AL[AL > 0.5] = 1
+    AL[AL < 0.5] = 0
+    AL[AL >= 0.5] = 1
 
     ## Calculate success percentage
-    success = 1 - np.count_nonzero(Y_test - AL)/len(Y_test)
+    success = 1 - np.count_nonzero(Y_test - AL)/m
     
     return success
 
