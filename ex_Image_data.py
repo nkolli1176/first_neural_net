@@ -4,7 +4,7 @@
 Created on Mon Mar  4 21:22:50 2019
 Read in train and test data from folder
 Folder structure
-test: folders 0 and 1 contain examples moved from the train set
+test: folders 0 and 1 are empty
 train: folders 0 and 1 contain classified examples
 @author: administrator
 """
@@ -23,39 +23,96 @@ def get_imlist(path):
 def AssignImageData(folder):
 
     np.random.seed(1)
-    im_1s = get_imlist(folder+'train/1')
+    im_1s = get_imlist(folder+'test/1')
     x_1s = []
     y_1s = []
-
-    for im in im_1s:
+    
+    for im in im_1s:    
 #        myrand = np.random.rand()
         imh = np.array(Image.open(im))
         im1d = imh.flatten()
         x_1s.append(im1d)
         y_1s.append(np.ones(1,))
 
-    im_0s = get_imlist(folder+'train/0')
+    im_0s = get_imlist(folder+'test/0')
     x_0s = []
     y_0s = []
-
-    for im in im_0s:
+    
+    for im in im_0s:    
         imh = np.array(Image.open(im))
         im1d = imh.flatten()
         x_0s.append(im1d)
         y_0s.append(np.zeros(1,))
 
-    X_train = np.transpose(np.asarray(x_1s + x_0s)/255)
+    X_train = np.transpose(np.asarray(x_1s + x_0s))
     Y_train = np.transpose(np.asarray(y_1s + y_0s))
-
-    np.savetxt('X_train.dat', X_train)
-    np.savetxt('Y_train.dat', Y_train)
+    
+    np.savetxt('X_test.dat', X_train)
+    np.savetxt('Y_test.dat', Y_train)
+    
 
     print(X_train.shape)
     print(Y_train.shape)
     print(Y_train[0,1])
-    print(Y_train[0,12502])
+    print(Y_train[0,2602])
 
-    return X_train, Y_train
+#    print(len(X_train))
+#    print(X_train[1].shape)
+#    print(len(Y_train))
+#    print(Y_train[1].shape)
+#    print(Y_train[1])
+#    print(Y_train[12502])
+    
+    train, test = [], []
+    return train, test
 
-foldername = '/Users/nkolli/Documents/Python/Cats_vs_Dogs/'
-X_tr, Y_tr = AssignImageData(foldername)
+def AssignLabelsImportImages(foldername, t_size):
+    
+    imgs = get_imlist(foldername)
+    xs_train = []
+    ys_train = []
+    
+    xs_test = []
+    ys_test = []
+    
+    for im in imgs:
+        myrand = np.random.rand()
+        img = Image.open(im)
+        img = img.resize(t_size, Image.ANTIALIAS)
+        img = np.array(img)        
+        
+        if (myrand <= 0.2):
+            xs_test.append(img.flatten())
+            if ("cat" in os.path.basename(im)):
+                ys_test.append(1)
+            else:
+                ys_test.append(0)
+        else:
+            xs_train.append(img.flatten())
+            if ("cat" in os.path.basename(im)):
+                ys_train.append(1)
+            else:
+                ys_train.append(0)
+            
+    X_train = np.transpose(np.asarray(xs_train))
+    X_test = np.transpose(np.asarray(xs_test))
+     
+    Y_train = np.transpose(np.asarray(ys_train))
+    Y_test = np.transpose(np.asarray(ys_test))
+
+    return X_train, Y_train, X_test, Y_test
+
+def main():
+    foldername = '/Users/administrator/Documents/Python/Data/Kaggle_train/'
+#    X, X_test = AssignImageData(foldername)
+    t_size= (128, 128)
+    xs_train, ys_train, xs_test, ys_test = AssignLabelsImportImages(foldername, t_size)
+    print(xs_train.shape, ys_train.shape, xs_test.shape, ys_test.shape)
+
+    np.savetxt('X_K_test.dat', xs_test)
+    np.savetxt('Y_K_test.dat', ys_test)
+    np.savetxt('X_K_train.dat', xs_train)
+    np.savetxt('Y_K_train.dat', ys_train)
+
+if __name__ == "__main__":
+    main()

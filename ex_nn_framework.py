@@ -21,9 +21,22 @@ import ex_update_parameters
 import ex_back_prop
 import ex_compute_cost
 
+def showImageData(X, Y, t_size):
+    
+#    # To view the images, make sure labeling is correct
+    imgi = int(input('Enter an index..'))
+    while (imgi != 99):
+        print('Index chosen is...', imgi)
+        print('Label is...', Y[imgi])
+        reimg = Image.fromarray(np.reshape(X[:,imgi],(t_size)))
+#        t_size = (320,320)
+#        reimg = reimg.resize(t_size, Image.ANTIALIAS)
+        plt.imshow(reimg)
+        imgi = int(input('Enter an index..'))
 
 
-def L_layer_model(X, Y, layers_dims, learning_rate = 0.001, num_iterations = 3000, print_cost=1):#lr was 0.009
+
+def L_layer_model(X, Y, layers_dims, numbatches, learning_rate = 0.001, num_iterations = 3000, print_cost=1):#lr was 0.009
     """
     Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
     
@@ -56,25 +69,39 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.001, num_iterations = 300
 
     X_xval = X[:,m-xval+1:]
     Y_xval = Y[m-xval+1:]
+
+    # Batch training, numbatches is 1 if no batch separation
+    batch_size = int(X_train.shape[1]/numbatches)
     
+    starttime = time.time()
     # Loop (gradient descent)
     for i in range(0, num_iterations): 
-
-        # Forward propagation: [LINEAR -> RELU]*(L-1) -> LINEAR -> SIGMOID.
-        AL, caches = ex_fwd_prop.L_model_forward(X_train, newparams)
         
-        # Compute cost.
-        cost, train_success = ex_compute_cost.compute_cost(AL, Y_train)
-    
-        # Backward propagation.
-        grads = ex_back_prop.L_model_backward(AL, Y_train, caches)
- 
-        # Update parameters.
-        newparams = ex_update_parameters.update_parameters(newparams, grads, learning_rate)
+        for k in range(0, numbatches):
+            
+            X_batch = X_train[:,(k*batch_size):((k+1)*batch_size-1)]
+            Y_batch = Y_train[:,(k*batch_size):((k+1)*batch_size-1)]
+
+            # Forward propagation: [LINEAR -> RELU]*(L-1) -> LINEAR -> SIGMOID.            
+            AL, caches = ex_fwd_prop.L_model_forward(X_batch, newparams)
+            
+            # Compute cost
+            cost, train_success = ex_compute_cost.compute_cost(AL, Y_batch)
+            # Compute cost with L2 reg
+            # cost, train_success = ex_compute_cost.compute_L2_reg_cost(AL, Y_batch, newparams, L2_lambd)
+        
+            # Backward propagation
+            grads = ex_back_prop.L_model_backward(AL, Y_batch, caches)
+            # Backward propagation with L2 reg
+            # grads = ex_back_prop.L_model_backward_L2_reg(AL, Y_batch, caches, L2_lambd)
+     
+            # Update parameters.
+            newparams = ex_update_parameters.update_parameters(newparams, grads, learning_rate)
                 
         # Print the cost every nth training cycle
         if print_cost and i % 10 == 0:
-            print ("Cost after iteration %i: %f" %(i, cost))
+            endtime = time.time()
+            print ("Cost after iteration %i: %f, Time: %f" %(i, cost, (endtime-starttime)))
             costs.append(cost)
             train_successes.append(train_success)
             # Run xval set and compute cost.
@@ -93,7 +120,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate = 0.001, num_iterations = 300
             
     return parameters, newparams, train_success
 
-def train_data(localfolder, layers_dims, learning_rate, num_epochs, print_cost):
+def train_data(localfolder, layers_dims, numbatches, learning_rate, num_epochs, print_cost):
     
     # Load dataset 
     X_train = np.loadtxt(localfolder+'/X_train.dat')
@@ -107,17 +134,6 @@ def train_data(localfolder, layers_dims, learning_rate, num_epochs, print_cost):
     np.random.shuffle(marr)
     X_train = X_train[:,marr]
     Y_train = Y_train[marr]
-
-#    # To view the images, make sure labeling is correct
-#    imgi = int(input('Enter an index..'))
-#    while (imgi != 99):
-#        print('Index chosen is...', imgi)
-#        print('Label is...', Y_train[imgi])
-#        reimg = Image.fromarray(np.reshape(X_train[:,imgi],(32,32)))
-#        t_size = (320,320)
-#        reimg = reimg.resize(t_size, Image.ANTIALIAS)
-#        reimg.show()
-#        imgi = int(input('Enter an index..'))
     
     X_train = X_train/255
 #    X_train[X_train <= 0.4] = 0
@@ -125,7 +141,7 @@ def train_data(localfolder, layers_dims, learning_rate, num_epochs, print_cost):
     
     print('Layer dims...'+str(layers_dims))
 
-    params, newparams, train_success = L_layer_model(X_train, Y_train, layers_dims, learning_rate, num_epochs, print_cost)
+    params, newparams, train_success = L_layer_model(X_train, Y_train, layers_dims, numbatches, learning_rate, num_epochs, print_cost)
     print('Optimization done..'+str(train_success))
     
     for i in range(1,int(len(newparams.keys())/2)+1):
@@ -133,12 +149,8 @@ def train_data(localfolder, layers_dims, learning_rate, num_epochs, print_cost):
         np.savetxt(localfolder+'/Out_b'+str(i), newparams['b'+str(i)])
 
     
-#    print(np.max(newparams['W4'] - params['W4']))
-#    print(np.max(newparams['W3'] - params['W3']))
-#    print(np.max(newparams['W2'] - params['W2']))
-#    print(np.max(newparams['W1'] - params['W1']))
 
-def test_data(localfolder, layers_dims):
+def test_data(localfolder, layers_dims, t_size):
     
     # Load test data
     X_test = np.loadtxt(localfolder+'/X_test.dat')
@@ -152,17 +164,6 @@ def test_data(localfolder, layers_dims):
     np.random.shuffle(marr)
     X_test = X_test[:,marr]
     Y_test = Y_test[marr]
-
-#    # To view the images, make sure labeling is correct
-#    imgi = int(input('Enter an index..'))
-#    while (imgi != 99):
-#        print('Index chosen is...', imgi)
-#        print('Label is...', Y_train[imgi])
-#        reimg = Image.fromarray(np.reshape(X_train[:,imgi],(32,32)))
-#        t_size = (320,320)
-#        reimg = reimg.resize(t_size, Image.ANTIALIAS)
-#        reimg.show()
-#        imgi = int(input('Enter an index..'))
     
     X_test = X_test/255
 #    X_train[X_train <= 0.4] = 0
@@ -185,20 +186,15 @@ def test_data(localfolder, layers_dims):
 
     ### Run forward prop to get the output activations    
     AL, caches = ex_fwd_prop.L_model_forward(X_test, parameters)
-#    print('AL max is ...', np.max(AL))
-#    print('AL min is ...', np.min(AL))
-#    print('AL avg is ...', np.mean(AL))
-#    print('AL median is ...', np.median(AL))
-#    print(AL.shape, Y_test.shape)
-#    print((Y_test - AL).shape)
-#    print(np.count_nonzero(AL < 0.3))
     
     ### Convert AL to binary calls
-    AL[AL < 0.5] = 0
-    AL[AL >= 0.5] = 1
-
+    calls = (AL >= 0.5)
+    
     ## Calculate success percentage
-    success = 1 - np.count_nonzero(Y_test - AL)/m
+    success = 1 - np.count_nonzero(Y_test - calls)/m
+
+    # Show images from test data and the classification results    
+    showImageData(X_test, calls, (t_size))    
     
     return success
 
@@ -208,29 +204,28 @@ def main():
     starttime = time.time()
     print(time.ctime())
 
-    # Define input feature length - number of pixels in the images here    
-    dim_1 = 12288
-    layers_dims = [dim_1, 50, 13, 5, 1] #  5-layer model
+    # Define input feature length - number of pixels in the images here
+    img_h = 64
+    img_w = 64
+    img_d = 3
 
-    ### To train data
+    dim_1 = img_h * img_w * img_d
+    layers_dims = [dim_1, 25, 13, 5, 1] #  5-layer model
+
+    ### Train data
+    numbatches = 10
     learning_rate = 0.005
     num_epochs = 15000
     print_cost = 1
-    train_data(localfolder, layers_dims, learning_rate, num_epochs, print_cost)
+    train_data(localfolder, layers_dims, numbatches, learning_rate, num_epochs, print_cost)
     
     ### Test data
-    success = test_data(localfolder, layers_dims)
-#    print('Success ratio is..', success)
+    success = test_data(localfolder, layers_dims, (img_w, img_h))
+
     endtime = time.time()
     print('Time {0}, num_epochs {1}, success {2}'.format((endtime-starttime), num_epochs, success))
-    # 0.64 best score with 0.01 lr, 10k epoch
     
 if __name__ == "__main__":
     main()
  
-# Next steps
-#    1. Find dataset, split into test, validation and training sets
-#    2. Run training set, get new params
-#    3. Run hyper-param optimization using validation
-#    4. Run on test set with final params
     
