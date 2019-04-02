@@ -20,6 +20,11 @@ def get_imlist(path):
 
   return [os.path.join(path,f) for f in os.listdir(path) if f.endswith('.jpg')]
 
+def rgb2luma(rgb):
+
+    limg = 0.2989 * rgb[:,:,0] + 0.5870 * rgb[:,:,1] + 0.1140 * rgb[:,:,2]    
+    return np.floor(limg)
+
 def AssignImageData(folder):
 
     np.random.seed(1)
@@ -78,8 +83,10 @@ def AssignLabelsImportImages(foldername, t_size):
     for im in imgs:
         myrand = np.random.rand()
         img = Image.open(im)
-        img = img.resize(t_size, Image.ANTIALIAS)
+        img = img.resize((t_size), Image.ANTIALIAS)
         img = np.array(img)        
+        # Convert to Luma, optional
+        img = rgb2luma(img)
         
         if (myrand <= 0.2):
             xs_test.append(img.flatten())
@@ -103,16 +110,16 @@ def AssignLabelsImportImages(foldername, t_size):
     return X_train, Y_train, X_test, Y_test
 
 def main():
-    foldername = '/Users/administrator/Documents/Python/Data/Kaggle_train/'
+    foldername = '/Users/administrator/Documents/Python/Data_Kag/Kaggle_train/'
 #    X, X_test = AssignImageData(foldername)
-    t_size= (128, 128)
+    t_size = (128, 128)
     xs_train, ys_train, xs_test, ys_test = AssignLabelsImportImages(foldername, t_size)
     print(xs_train.shape, ys_train.shape, xs_test.shape, ys_test.shape)
 
-    np.savetxt('X_K_test.dat', xs_test)
-    np.savetxt('Y_K_test.dat', ys_test)
-    np.savetxt('X_K_train.dat', xs_train)
-    np.savetxt('Y_K_train.dat', ys_train)
+    np.savetxt('X_K_mono_test.dat', xs_test)
+    np.savetxt('Y_K_mono_test.dat', ys_test)
+    np.savetxt('X_K_mono_train.dat', xs_train)
+    np.savetxt('Y_K_mono_train.dat', ys_train)
 
 if __name__ == "__main__":
     main()
