@@ -21,6 +21,32 @@ import ex_update_parameters
 import ex_back_prop
 import ex_compute_cost
 
+def loadSavedParams(folder, layers_dims):
+
+    num_layers = len(layers_dims)
+    
+    ### Load parameters from training
+    parameters = {}
+    for i in range(num_layers-1):
+        parameters['W'+str(i+1)] = np.loadtxt(folder+'/Out_W'+str(i+1))
+        if (len(parameters['W'+str(i+1)].shape) < 2):
+            parameters['W'+str(i+1)] = np.reshape(parameters['W'+str(i+1)], (1, len(parameters['W'+str(i+1)])))
+            
+        parameters['b'+str(i+1)] = np.loadtxt(folder+'/Out_b'+str(i+1))
+        if (len(parameters['b'+str(i+1)].shape) < 1):
+            parameters['b'+str(i+1)] = np.reshape(parameters['b'+str(i+1)], (1, 1))
+        else:
+            parameters['b'+str(i+1)] = np.reshape(parameters['b'+str(i+1)], (len(parameters['b'+str(i+1)]), 1))            
+    
+    return parameters
+
+def saveParams(folder, params):
+    # Save parameters from training
+    for i in range(1,int(len(params.keys())/2)+1):
+        np.savetxt(folder+'/Out_W'+str(i), params['W'+str(i)])
+        np.savetxt(folder+'/Out_b'+str(i), params['b'+str(i)])
+            
+        
 def showImageData(X, Y, t_size):
     
 #    # To view the images, make sure labeling is correct
@@ -63,7 +89,7 @@ def splitKfold(X, Y, j, kfolds, m):
 #    print(x_xval.shape, y_xval.shape, x_train.shape, y_train.shape)
     return x_xval, y_xval, x_train, y_train
 
-def L_layer_model(X, Y, layers_dims, kfolds_num, numbatches, learning_rate = 0.001, num_iterations = 3000, print_cost=1):#lr was 0.009
+def L_layer_model(X, Y, parameters, layers_dims, kfolds_num, numbatches, learning_rate = 0.001, num_iterations = 3000, print_cost=1, localfolder):#lr was 0.009
     """
     Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
     
@@ -85,7 +111,9 @@ def L_layer_model(X, Y, layers_dims, kfolds_num, numbatches, learning_rate = 0.0
     train_successes = []
     xval_successes = []
     # Parameters initialization
-    parameters = ex_init_layer_weights.initialize_parameters_deep(layers_dims)
+    if (len(parameters) == 0):
+        parameters = ex_init_layer_weights.initialize_parameters_deep(layers_dims)
+
     newparams = copy.deepcopy(parameters)
     
     # Separate ino Training and Cross validation sets
@@ -140,11 +168,13 @@ def L_layer_model(X, Y, layers_dims, kfolds_num, numbatches, learning_rate = 0.0
             plt.title("Learning rate =" + str(learning_rate))
             plt.draw()
             plt.pause(1)
+            # Optional save parameters every nth iteration for future use
+            saveParams(localfolder, newparams)
 
             
     return parameters, newparams, train_success
 
-def train_data(localfolder, layers_dims, kfolds, numbatches, learning_rate, num_epochs, print_cost):
+def train_data(localfolder, layers_dims, kfolds, numbatches, learning_rate, num_epochs, print_cost, use_saved_params):
     
     # Load dataset 
     X_train = np.loadtxt(localfolder+'/X_K_mono_train.dat')
@@ -165,13 +195,14 @@ def train_data(localfolder, layers_dims, kfolds, numbatches, learning_rate, num_
 #    X_train[X_train > 0.4] = 1
     
     print('Layer dims...'+str(layers_dims) + '...' + str(time.ctime()))
+    parameters = {}
+    if (use_saved_params):
+        parameters = loadSavedParams(localfolder, layers_dims)
 
-    params, newparams, train_success = L_layer_model(X_train, Y_train, layers_dims, kfolds, numbatches, learning_rate, num_epochs, print_cost)
+    params, newparams, train_success = L_layer_model(X_train, Y_train, parameters, layers_dims, kfolds, numbatches, learning_rate, num_epochs, print_cost, localfolder)
     print('Optimization done..'+str(train_success))
     
-    for i in range(1,int(len(newparams.keys())/2)+1):
-        np.savetxt(localfolder+'/Out_W'+str(i), newparams['W'+str(i)])
-        np.savetxt(localfolder+'/Out_b'+str(i), newparams['b'+str(i)])
+    saveParams(localfolder, newparams)
 
     
 
@@ -194,21 +225,8 @@ def test_data(localfolder, layers_dims, t_size):
 #    X_train[X_train <= 0.4] = 0
 #    X_train[X_train > 0.4] = 1
     
-    num_layers = len(layers_dims)
-
-    ### Load parameters from training
-    parameters = {}
-    for i in range(num_layers-1):
-        parameters['W'+str(i+1)] = np.loadtxt(localfolder+'/Out_W'+str(i+1))
-        if (len(parameters['W'+str(i+1)].shape) < 2):
-            parameters['W'+str(i+1)] = np.reshape(parameters['W'+str(i+1)], (1, len(parameters['W'+str(i+1)])))
-            
-        parameters['b'+str(i+1)] = np.loadtxt(localfolder+'/Out_b'+str(i+1))
-        if (len(parameters['b'+str(i+1)].shape) < 1):
-            parameters['b'+str(i+1)] = np.reshape(parameters['b'+str(i+1)], (1, 1))
-        else:
-            parameters['b'+str(i+1)] = np.reshape(parameters['b'+str(i+1)], (len(parameters['b'+str(i+1)]), 1))            
-
+    parameters = loadSavedParams(localfolder, layers_dims)
+    
     ### Run forward prop to get the output activations    
     AL, caches = ex_fwd_prop.L_model_forward(X_test, parameters)
     
@@ -232,7 +250,7 @@ def main():
     # Define input feature length - number of pixels in the images here
     img_h = 128
     img_w = 128
-    img_d = 3
+    img_d = 1
 
     dim_1 = img_h * img_w * img_d
     layers_dims = [dim_1, 25, 13, 5, 1] #  5-layer model
@@ -243,7 +261,8 @@ def main():
     learning_rate = 0.001
     num_epochs = 10000
     print_cost = 1
-    train_data(localfolder, layers_dims, kfolds, numbatches, learning_rate, num_epochs, print_cost)
+    use_saved_params = 1
+    train_data(localfolder, layers_dims, kfolds, numbatches, learning_rate, num_epochs, print_cost, use_saved_params)
     
     ### Test data
     success = test_data(localfolder, layers_dims, (img_w, img_h))
