@@ -85,7 +85,7 @@ def L_model_backward_L2_reg(AL, Y, caches, L2_lambd):
 
         dW = np.divide(np.matmul(dz, temp_al_prev), m)
         # Gradient for W here is L2 regularized
-        L2term = (L2_lambd * np.sum(caches['W'+str(i)]))/m
+        L2term = (L2_lambd * caches['W'+str(i)])/m
         dW += L2term
         
         db = np.divide(np.sum(dz, axis=1, keepdims=True), m)
